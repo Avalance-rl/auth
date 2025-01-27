@@ -9,25 +9,25 @@ import (
 	"time"
 )
 
-type token struct {
+type tokenService struct {
 	signingMethod jwt.SigningMethod
 	expiration    time.Duration
 	secret        string
 }
 
-func New(
+func NewTokenService(
 	signingMethod jwt.SigningMethod,
 	expiration time.Duration,
 	secret string,
-) *token {
-	return &token{
+) *tokenService {
+	return &tokenService{
 		signingMethod: signingMethod,
 		expiration:    expiration,
 		secret:        secret,
 	}
 }
 
-func (t *token) Create(
+func (t *tokenService) Create(
 	user entity.User,
 	signingMethod jwt.SigningMethod,
 	exp time.Duration,
@@ -50,7 +50,7 @@ func (t *token) Create(
 	return accessTokenString, nil
 }
 
-func (t *token) Parse(
+func (t *tokenService) Parse(
 	token string,
 	signingMethod jwt.SigningMethod,
 	exp time.Duration,
@@ -103,7 +103,7 @@ func (t *token) Parse(
 	return accessToken, nil
 }
 
-func (t *token) GetAccessToken(accessHead string) (string, error) {
+func (t *tokenService) GetAccessToken(accessHead string) (string, error) {
 	const bearer = "Bearer "
 	if !strings.HasPrefix(accessHead, bearer) {
 		return "", fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
