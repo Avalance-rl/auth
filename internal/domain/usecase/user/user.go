@@ -10,9 +10,9 @@ import (
 
 type Service interface {
 	Create(ctx context.Context, user entity.User) error
-	GetByID(ctx context.Context, id string) (entity.User, error)
-	Update(ctx context.Context, fieldOfUpdates map[string]any) error
-	Delete(ctx context.Context, id string) error
+	GetByID(ctx context.Context, uuid string) (entity.User, error)
+	Update(ctx context.Context, uuid string, fieldOfUpdates map[string]any) error
+	Delete(ctx context.Context, uuid string) error
 }
 
 type JWTService interface {
