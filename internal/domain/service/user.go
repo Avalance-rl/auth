@@ -11,6 +11,7 @@ type UserCreator interface {
 
 type UserFinder interface {
 	FindByID(ctx context.Context, uuid string) (entity.User, error)
+	FindByEmail(ctx context.Context, email string) (entity.User, error)
 }
 
 type UserUpdater interface {
@@ -52,6 +53,14 @@ func (s *userService) GetByID(ctx context.Context, uuid string) (entity.User, er
 		return entity.User{}, err
 	}
 
+	return user, nil
+}
+
+func (s *userService) GetByEmail(ctx context.Context, email string) (entity.User, error) {
+	user, err := s.userFinder.FindByEmail(ctx, email)
+	if err != nil {
+		return entity.User{}, err
+	}
 	return user, nil
 }
 

@@ -11,6 +11,7 @@ import (
 type Service interface {
 	Create(ctx context.Context, user entity.User) error
 	GetByID(ctx context.Context, uuid string) (entity.User, error)
+	GetByEmail(ctx context.Context, email string) (entity.User, error)
 	Update(ctx context.Context, uuid string, fieldOfUpdates map[string]any) error
 	Delete(ctx context.Context, uuid string) error
 }

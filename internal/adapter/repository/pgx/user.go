@@ -101,6 +101,42 @@ func (u *userRepository) FindByID(ctx context.Context, uuid string) (entity.User
 	return user, nil
 }
 
+func (u *userRepository) FindByEmail(ctx context.Context, email string) (entity.User, error) {
+	var userRepo model.User
+
+	sb := sqlbuilder.NewSelectBuilder()
+	sb.Select(
+		"uuid",
+		"email",
+		"password",
+		"created_at",
+		"updated_at",
+	).
+		From("users").
+		Where(sb.Equal("email", email))
+
+	sql, args := sb.Build()
+
+	row := u.pgxPool.Pool.QueryRow(ctx, sql, args...)
+	err := row.Scan(
+		&userRepo.UUID,
+		&userRepo.Email,
+		&userRepo.Password,
+		&userRepo.CreatedAt,
+		&userRepo.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return entity.User{}, fmt.Errorf("user with email %s not found", email)
+		}
+		return entity.User{}, fmt.Errorf("failed to find user by ID: %w", err)
+	}
+
+	user := userRepo.ConvertToEntity()
+
+	return user, nil
+}
+
 func (u *userRepository) Update(ctx context.Context, uuid string, fieldOfUpdates map[string]any) error {
 	if len(fieldOfUpdates) == 0 {
 		return fmt.Errorf("no fields to update")
