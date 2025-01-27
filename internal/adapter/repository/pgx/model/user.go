@@ -25,7 +25,6 @@ func (u *User) ConvertFromEntity(userEntity entity.User) {
 func (u *User) ConvertToEntity() entity.User {
 	return entity.User{
 		UUID:     u.UUID,
-		Username: u.Email,
 		Email:    u.Email,
 		Password: u.Password,
 	}

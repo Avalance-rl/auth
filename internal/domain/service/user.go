@@ -61,6 +61,7 @@ func (s *userService) GetByEmail(ctx context.Context, email string) (entity.User
 	if err != nil {
 		return entity.User{}, err
 	}
+
 	return user, nil
 }
 

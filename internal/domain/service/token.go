@@ -27,21 +27,16 @@ func NewTokenService(
 	}
 }
 
-func (t *tokenService) Create(
-	user entity.User,
-	signingMethod jwt.SigningMethod,
-	exp time.Duration,
-	secret string,
-) (string, error) {
+func (t *tokenService) Create(user entity.User) (string, error) {
 	now := time.Now()
 	accessPayload := jwt.MapClaims{
 		"sub": user.UUID.String(),
 		"iat": now.Unix(),
-		"exp": now.Add(exp).Unix(),
+		"exp": now.Add(t.expiration).Unix(),
 	}
-	accessToken := jwt.NewWithClaims(signingMethod, accessPayload)
+	accessToken := jwt.NewWithClaims(t.signingMethod, accessPayload)
 
-	jwtSecretKey := []byte(secret)
+	jwtSecretKey := []byte(t.secret)
 	accessTokenString, err := accessToken.SignedString(jwtSecretKey)
 	if err != nil {
 		return "", err
@@ -50,18 +45,13 @@ func (t *tokenService) Create(
 	return accessTokenString, nil
 }
 
-func (t *tokenService) Parse(
-	token string,
-	signingMethod jwt.SigningMethod,
-	exp time.Duration,
-	secret string,
-) (entity.AccessToken, error) {
+func (t *tokenService) Parse(token string) (entity.AccessToken, error) {
 	claim := jwt.MapClaims{}
 	_, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
-		if token.Header["alg"] != signingMethod.Alg() {
+		if token.Header["alg"] != t.signingMethod.Alg() {
 			return nil, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
 		}
-		return []byte(secret), nil
+		return []byte(t.secret), nil
 	})
 	if err != nil {
 		return entity.AccessToken{}, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
