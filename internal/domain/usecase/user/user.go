@@ -3,11 +3,12 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/avalance-rl/otiva-pkg/logger"
 	"github.com/avalance-rl/otiva/services/auth/internal/domain/entity"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 type Service interface {

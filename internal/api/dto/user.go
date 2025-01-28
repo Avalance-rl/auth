@@ -5,8 +5,7 @@ type UserRegisterReq struct {
 	Password string `json:"password,required"`
 }
 
-type UserRegisterResp struct {
-}
+type UserRegisterResp struct{}
 
 type UserLoginReq struct {
 	Email    string `json:"email,required"`

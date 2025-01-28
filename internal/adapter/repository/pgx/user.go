@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/avalance-rl/otiva-pkg/database"
 	"github.com/avalance-rl/otiva-pkg/logger"
 	"github.com/avalance-rl/otiva/services/auth/internal/adapter/repository/pgx/model"

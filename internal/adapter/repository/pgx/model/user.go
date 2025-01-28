@@ -1,9 +1,10 @@
 package model
 
 import (
+	"time"
+
 	"github.com/avalance-rl/otiva/services/auth/internal/domain/entity"
 	"github.com/google/uuid"
-	"time"
 )
 
 type User struct {

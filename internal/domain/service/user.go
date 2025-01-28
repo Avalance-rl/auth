@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/avalance-rl/otiva/services/auth/internal/domain/entity"
 )
 

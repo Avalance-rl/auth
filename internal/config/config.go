@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	baseConfig "github.com/avalance-rl/otiva-pkg/config"
 	"github.com/spf13/viper"
 )

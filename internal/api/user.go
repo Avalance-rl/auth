@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+
 	"github.com/avalance-rl/otiva-pkg/logger"
 	authv1 "github.com/avalance-rl/otiva/proto/gen/avalance.auth.v1"
 	"github.com/avalance-rl/otiva/services/auth/internal/domain/entity"

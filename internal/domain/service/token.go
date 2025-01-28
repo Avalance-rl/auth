@@ -2,11 +2,12 @@ package service
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/avalance-rl/otiva/services/auth/internal/domain/entity"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"strings"
-	"time"
 )
 
 type tokenService struct {
@@ -81,7 +82,7 @@ func (t *tokenService) Parse(token string) (entity.AccessToken, error) {
 	issuedAt := time.Unix(int64(unixIssuedAt), 0)
 
 	accessToken := entity.AccessToken{}
-	//accessToken.SetUserRoleFromString(role)
+	// accessToken.SetUserRoleFromString(role)
 	userUUID, err := uuid.Parse(sub)
 	if err != nil {
 		return entity.AccessToken{}, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
