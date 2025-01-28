@@ -20,8 +20,7 @@ type Service interface {
 
 type TokenService interface {
 	Create(user entity.User) (string, error)
-	Parse(token string, signingMethod jwt.SigningMethod, exp time.Duration, secret string) (entity.AccessToken, error)
-	GetAccessToken(accessHead string) (string, error)
+	Parse(token string) (entity.AccessToken, error)
 }
 
 type userUsecase struct {
@@ -58,7 +57,7 @@ func (u userUsecase) Create(ctx context.Context, user CreateDTO) error {
 	}
 	user.Password = string(hashedPassword)
 
-	err = u.service.Create(ctx, user)
+	err = u.service.Create(ctx, user.ConvertToEntity())
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
@@ -82,6 +81,15 @@ func (u userUsecase) Authenticate(ctx context.Context, email, password string) (
 	}
 
 	return token, nil
+}
+
+func (u userUsecase) ValidateToken(ctx context.Context, token string) (entity.AccessToken, error) {
+	tokenParsed, err := u.tokenService.Parse(token)
+	if err != nil {
+		return entity.AccessToken{}, err
+	}
+
+	return tokenParsed, nil
 }
 
 func (u userUsecase) GetByID(ctx context.Context, uuid string) (entity.User, error) {

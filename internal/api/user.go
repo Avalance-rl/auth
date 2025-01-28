@@ -3,81 +3,83 @@ package v1
 import (
 	"context"
 	"github.com/avalance-rl/otiva-pkg/logger"
-	"github.com/avalance-rl/otiva/services/auth/internal/api/dto"
+	authv1 "github.com/avalance-rl/otiva/proto/gen/avalance.auth.v1"
+	"github.com/avalance-rl/otiva/services/auth/internal/domain/entity"
 	usecase "github.com/avalance-rl/otiva/services/auth/internal/domain/usecase/user"
-	jsoniter "github.com/json-iterator/go"
-	"net/http"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserUsecase interface {
 	Create(ctx context.Context, user usecase.CreateDTO) error
 	Authenticate(ctx context.Context, email, password string) (string, error)
+	ValidateToken(ctx context.Context, token string) (entity.AccessToken, error)
 }
 
-type userHandler struct {
+type authServer struct {
+	authv1.UnimplementedAuthServiceServer
 	userUsecase UserUsecase
 	log         *logger.Logger
 }
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-func NewUserHandler(userUsecase UserUsecase, log *logger.Logger) *userHandler {
-	return &userHandler{
+func NewAuthServer(userUsecase UserUsecase, log *logger.Logger) authv1.AuthServiceServer {
+	return &authServer{
 		userUsecase: userUsecase,
 		log:         log,
 	}
 }
 
-func (u *userHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /user", u.register)
-}
-
-func (u *userHandler) register(w http.ResponseWriter, r *http.Request) {
-	var req dto.UserRegisterReq
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
+func (s *authServer) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.AuthResponse, error) {
 	user := usecase.CreateDTO{
 		Email:    req.Email,
 		Password: req.Password,
 	}
 
-	err := u.userUsecase.Create(r.Context(), user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if err := s.userUsecase.Create(ctx, user); err != nil {
+		s.log.Error("failed to create user", zap.Error(err))
+		return nil, status.Error(codes.Internal, "failed to create user")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	// После успешной регистрации сразу аутентифицируем пользователя
+	accessToken, err := s.userUsecase.Authenticate(ctx, req.Email, req.Password)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to authenticate user")
+	}
+
+	return &authv1.AuthResponse{
+		Token: accessToken,
+	}, nil
 }
 
-func (u *userHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var req dto.UserLoginReq
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	token, err := u.userUsecase.Authenticate(r.Context(), req.Email, req.Password)
+func (s *authServer) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.AuthResponse, error) {
+	accessToken, err := s.userUsecase.Authenticate(ctx, req.Email, req.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
+		s.log.Error("failed to authenticate user", zap.Error(err))
+		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
 
-	resp := dto.UserLoginResp{
-		Token: token,
+	_, err = s.userUsecase.ValidateToken(ctx, accessToken)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to get user info")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
+	return &authv1.AuthResponse{
+		Token: accessToken,
+	}, nil
+}
+
+func (s *authServer) ValidateToken(ctx context.Context, req *authv1.TokenRequest) (*authv1.ValidationResponse, error) {
+	token, err := s.userUsecase.ValidateToken(ctx, req.Token)
+	if err != nil {
+		s.log.Error("failed to validate token", zap.Error(err))
+		return &authv1.ValidationResponse{
+			Valid: false,
+		}, nil
 	}
 
+	return &authv1.ValidationResponse{
+		Valid:  token.Expired(),
+		UserId: token.UserUUID.String(),
+	}, nil
 }

@@ -62,10 +62,10 @@ func (t *tokenService) Parse(token string) (entity.AccessToken, error) {
 		return entity.AccessToken{}, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
 	}
 
-	role, ok := claim["role"].(string)
-	if !ok {
-		return entity.AccessToken{}, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
-	}
+	//role, ok := claim["role"].(string)
+	//if !ok {
+	//	return entity.AccessToken{}, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
+	//}
 
 	unixExpiresAt, ok := claim["exp"].(float64)
 	if !ok {
@@ -81,7 +81,7 @@ func (t *tokenService) Parse(token string) (entity.AccessToken, error) {
 	issuedAt := time.Unix(int64(unixIssuedAt), 0)
 
 	accessToken := entity.AccessToken{}
-	accessToken.SetUserRoleFromString(role)
+	//accessToken.SetUserRoleFromString(role)
 	userUUID, err := uuid.Parse(sub)
 	if err != nil {
 		return entity.AccessToken{}, fmt.Errorf("ErrInvalidToken.NewWithNoMessage()")
